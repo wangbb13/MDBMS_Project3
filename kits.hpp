@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <algorithm>
+#include <unordered_map>
 #include "types.hpp"
 using namespace std;
 

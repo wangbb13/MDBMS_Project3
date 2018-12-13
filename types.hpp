@@ -50,6 +50,7 @@ public:
     uint node_number;
     uint edge_number;
     uint max_edge_tau;
+    uint min_edge_tau;
 
     Graph() {
         node_min_id = 0;
@@ -86,4 +87,46 @@ public:
         fill(edge_support.begin(), edge_support.end(), 0);
         fill(edge_tau.begin(), edge_tau.end(), 0);
     }
+};
+
+class SuperGraph
+{
+public:
+    vector< unordered_set<uint> > super_vertex;
+    vector<uint> vertex_truss;
+    vector< Edge<uint> > edge_list;
+    vector< unordered_set<uint> > adj;
+
+    uint super_node_number;
+    uint super_edge_number;
+
+    SuperGraph() {
+        super_node_number = 0;
+        super_edge_number = 0;
+    }
+
+    void newVertex(uint k) {
+        super_vertex.push_back( unordered_set<uint>() );
+        vertex_truss.push_back(k);
+        super_node_number ++;
+    }
+
+    void addVertex(uint edge_no) {
+        super_vertex[super_node_number - 1].insert(edge_no);
+    }
+
+    void newEdge(uint u, uint v) {
+        edge_list.push_back(Edge<uint>(u, v));
+        super_edge_number ++;
+    }
+
+    void end() {
+        adj.resize(super_node_number + 1);
+        for (auto& e : edge_list) {
+            adj[e.a].insert(e.b);
+            adj[e.b].insert(e.a);
+        }
+    }
+
+    ~SuperGraph() {}
 };

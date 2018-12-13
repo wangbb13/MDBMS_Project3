@@ -60,6 +60,7 @@ void trussDecompose(Graph<T>& graph) {
         }
     }
     k = msv + 2;
+    graph.min_edge_tau = k;
 
     while (hasv < en) {
         while (hasv < en && msi >= 0 && msv <= (k-2)) {
@@ -94,4 +95,5 @@ void trussDecompose(Graph<T>& graph) {
         }
         k ++;
     }
+    graph.max_edge_tau = k - 1;
 }

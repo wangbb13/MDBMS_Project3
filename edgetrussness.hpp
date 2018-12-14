@@ -3,6 +3,8 @@
 #include "kits.hpp"
 using namespace std;
 
+// TODO: optimize choose edge with minimum support value
+
 /*
  * Input  > edges: graph.edge_list
  * Output < res: graph.edge_support
@@ -47,7 +49,7 @@ void trussDecompose(Graph<T>& graph) {
     T u, v, a, b;
     string e1_str =  "", e2_str = "";
 
-    vector< unordered_set<T> > adj(graph.adj); // TODO: reference, use later ?
+    vector< unordered_set<T> > adj(graph.adj);
     vector<uint> sup(graph.edge_support);
     vector<bool> visit(en, true);
     vector<uint>& tau = graph.edge_tau;

@@ -96,13 +96,15 @@ public:
     vector<uint> vertex_truss;
     vector< Edge<uint> > edge_list;
     vector< unordered_set<uint> > adj;
+    vector< unordered_set<uint> > inverse_table;
 
     uint super_node_number;
     uint super_edge_number;
 
-    SuperGraph() {
+    SuperGraph(uint nn) {
         super_node_number = 0;
         super_edge_number = 0;
+        inverse_table.resize(nn + 1);
     }
 
     void newVertex(uint k) {
@@ -111,8 +113,10 @@ public:
         super_node_number ++;
     }
 
-    void addVertex(uint edge_no) {
+    void addVertex(uint edge_no, uint u, uint v) {
         super_vertex[super_node_number - 1].insert(edge_no);
+        inverse_table[u].insert(super_node_number - 1);
+        inverse_table[v].insert(super_node_number - 1);
     }
 
     void newEdge(uint u, uint v) {

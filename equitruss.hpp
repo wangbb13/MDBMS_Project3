@@ -42,10 +42,10 @@ void buildEuqiTruss(Graph<T>& graph, SuperGraph& super_graph) {
                 while (!my_q.empty()) {
                     e = my_q.front();
                     my_q.pop();
-                    super_graph.addVertex(e);
-                    temp_set.insert(list[e].begin(), list[e].end());
                     a = e_list[e].a;
                     b = e_list[e].b;
+                    super_graph.addVertex(e, a, b);
+                    temp_set.insert(list[e].begin(), list[e].end());
                     if (adj[a].size() < adj[b].size()) {
                         u = a; v = b;
                     } else {

@@ -1,9 +1,6 @@
 #pragma once
-// #include <queue>
 #include "kits.hpp"
 using namespace std;
-
-// TODO: optimize choose edge with minimum support value
 
 /*
  * Input  > edges: graph.edge_list
@@ -45,7 +42,7 @@ template <typename T>
 void trussDecompose(Graph<T>& graph) {
     edgeSup(graph);
     uint k = 2, en = graph.edge_number, hasv = 0;
-    uint i, j, t, msv = 0x5fffffff, msi = -1;
+    uint i, j, t, msv = 0x5fffffff, msi = -1, index;
     T u, v, a, b;
     string e1_str =  "", e2_str = "";
 
@@ -54,13 +51,13 @@ void trussDecompose(Graph<T>& graph) {
     vector<bool> visit(en, true);
     vector<uint>& tau = graph.edge_tau;
     unordered_map<string, uint>& func = graph.edge_index_map;
+    set< pair< uint, uint > > bst;  // support value, edge index
 
     for (i = 0; i < en; ++ i) {
-        if (sup[i] < msv) {
-            msv = sup[i];
-            msi = i;
-        }
+        bst.insert(make_pair(sup[i], i));
     }
+    msv = bst.begin()->first;
+    msi = bst.begin()->second;
     k = msv + 2;
     graph.min_edge_tau = k;
 
@@ -78,8 +75,14 @@ void trussDecompose(Graph<T>& graph) {
                 if (func.find(e2_str) != func.end() &&
                     visit[func[e2_str]]) {
                     e1_str = edgeStr<T>(u, w);
-                    sup[func[e1_str]] --;
-                    sup[func[e2_str]] --;
+                    index = func[e1_str];
+                    bst.erase(make_pair(sup[index], index));
+                    sup[index] --;
+                    bst.insert(make_pair(sup[index], index));
+                    index = func[e2_str];
+                    bst.erase(make_pair(sup[index], index));
+                    sup[index] --;
+                    bst.insert(make_pair(sup[index], index));
                 }
             }
             tau[msi] = k;
@@ -87,13 +90,10 @@ void trussDecompose(Graph<T>& graph) {
             visit[msi] = false;
             adj[u].erase(v);
             adj[v].erase(u);
-            msv = 0x5fffffff; msi = -1;
-            for (i = 0; i < en; ++ i) {
-                if (visit[i] && sup[i] < msv) {
-                    msv = sup[i];
-                    msi = i;
-                }
-            }
+            // min in bst
+            bst.erase(make_pair(msv, msi));
+            msv = bst.begin()->first;
+            msi = bst.begin()->second;
         }
         k ++;
     }

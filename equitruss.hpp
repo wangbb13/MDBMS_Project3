@@ -4,7 +4,7 @@
 using namespace std;
 
 /*
- * Input  < graph with edge trussness
+ * Input  < graph with edge trussness !!!
  * Output > super graph, i.e. index EquiTruss
  */
 template <typename T>

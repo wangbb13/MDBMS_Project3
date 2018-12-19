@@ -1,10 +1,10 @@
 @echo off
 
-echo compile test.cpp ...
-g++ -std=c++11 test.cpp -o test 
+echo compile main.cpp ...
+g++ -std=c++11 main.cpp -o main 
 echo done
 
 echo.
-echo run test.exe ...
-test.exe
+echo run main.exe ...
+main.exe
 

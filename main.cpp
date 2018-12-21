@@ -3,8 +3,33 @@
 #include "edgetrussness.hpp"
 #include "equitruss.hpp"
 #include "search.hpp"
+#include "maintenance.hpp"
 #include <chrono>
 using namespace std::chrono;
+
+/* show index i.e. equitruss */
+void showIndex(Graph<uint>& graph, SuperGraph& super_graph) {
+    cout << "super node number = " << super_graph.super_node_number << endl; 
+    cout << "super edge number = " << super_graph.super_edge_number << endl;
+    cout << "super vertices : " << endl;
+    vector< Edge<uint> >& e_list = graph.edge_list;
+    vector< bool >& tomb = super_graph.tomb_super_node;
+
+    for (uint i = 0; i < super_graph.super_node_number; ++ i) {
+        cout << i << " : ";
+        if (tomb[i]) {
+            cout << " tomb " << endl;
+            continue;
+        }
+        for (auto& eno : super_graph.super_vertex[i]) 
+            cout << "(" << e_list[eno] << ") ";
+        cout << endl;
+    }
+    cout << "super edges : " << endl;
+    for (auto& item : super_graph.edge_list)
+        if (!tomb[item.a] && !tomb[item.b])
+            cout << item << endl;
+}
 
 int main(int argc, char const *argv[])
 {
@@ -35,40 +60,48 @@ int main(int argc, char const *argv[])
     cout << "max edge trussness = " << graph.max_edge_tau << endl;
 
     // test index EquiTruss
-    SuperGraph super_graph(graph.node_number);
+    SuperGraph super_graph(graph.node_max_id);
     start = high_resolution_clock::now();
     buildEuqiTruss(graph, super_graph);
     stop = high_resolution_clock::now();
     cost = duration_cast<microseconds>(stop - start);
     cout << "[buildEuqiTruss time]: " << cost.count() << " us" << endl << endl;
-    cout << "super node number = " << super_graph.super_node_number << endl; 
-    cout << "super edge number = " << super_graph.super_edge_number << endl;
-    cout << "super vertices : " << endl;
-    vector< Edge<uint> >& e_list = graph.edge_list;
-    for (uint i = 0; i < super_graph.super_node_number; ++ i) {
-        cout << i << " : ";
-        for (auto& eno : super_graph.super_vertex[i]) 
-            cout << "(" << e_list[eno] << ") ";
-        cout << endl;
-    }
-    cout << "super edges : " << endl;
-    for (auto& item : super_graph.edge_list)
-        cout << item << endl;
+    showIndex(graph, super_graph);
+    cout << "eliminate affected nodes and edges" << endl;
+    graph.resetAffect();    // eliminate affected nodes and edges
 
     // test community search
-    cout << "community search: k = 4, vertex = v4" << endl;
-    vector<uint> ans;
-    start = high_resolution_clock::now();
-    communitySearch(super_graph, ans, 4, 4);
-    stop = high_resolution_clock::now();
-    cost = duration_cast<microseconds>(stop - start);
-    cout << "[communitySearch time]: " << cost.count() << " us" << endl << endl;
-    for (auto& sv : ans)
-        cout << sv << " ";
-    cout << endl;
+    // cout << "community search: k = 4, vertex = v4" << endl;
+    // vector<uint> ans;
+    // start = high_resolution_clock::now();
+    // communitySearch(super_graph, ans, 4, 4);
+    // stop = high_resolution_clock::now();
+    // cost = duration_cast<microseconds>(stop - start);
+    // cout << "[communitySearch time]: " << cost.count() << " us" << endl << endl;
+    // for (auto& sv : ans)
+    //     cout << sv << " ";
+    // cout << endl;
 
     // maintenance of EquiTruss
-    // TODO
+    // vector< Edge<uint> > test_add;
+    // test_add.push_back(Edge<uint>(4, 9));
+    // start = high_resolution_clock::now();
+    // insertBatch(graph, super_graph, test_add);
+    // dynamicUpdate(graph, super_graph);
+    // stop = high_resolution_clock::now();
+    // cost = duration_cast<microseconds>(stop - start);
+    // cout << "[re-buildEuqiTruss time]: " << cost.count() << " us" << endl << endl;
+    // showIndex(graph, super_graph);
+    // TODO: more test case
+    vector< Edge<uint> > test_add;
+    test_add.push_back(Edge<uint>(6, 7));
+    start = high_resolution_clock::now();
+    removeBatch(graph, super_graph, test_add);
+    dynamicUpdate(graph, super_graph);
+    stop = high_resolution_clock::now();
+    cost = duration_cast<microseconds>(stop - start);
+    cout << "[re-buildEuqiTruss time]: " << cost.count() << " us" << endl << endl;
+    showIndex(graph, super_graph);
 
     system("pause");
     return 0;

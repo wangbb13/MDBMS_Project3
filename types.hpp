@@ -52,21 +52,21 @@ public:
 
     uint node_min_id;
     uint node_max_id;
-    uint node_number;
     uint edge_number;   // max edge_index + 1, precisely
     uint max_edge_tau;
     uint min_edge_tau;
 
     Graph() {
-        node_min_id = 0;
+        node_min_id = 0x1fffffff;
         node_max_id = 0;
-        node_number = 0;
         edge_number = 0;
+        max_edge_tau = 0;
+        min_edge_tau = 0x1fffffff;
     }
     
     ~Graph() {}
     
-    uint add(T x, T y) {    // return edge index, for dynamic
+    void add(T x, T y) {
         uint rtn = edge_number;
         Edge<T> e(x, y);
         if (edge_index_map.find(e.str) == edge_index_map.end()) {
@@ -82,10 +82,10 @@ public:
         }
         // for dynamic adj and degree
         if (node_max_id + 1 > degree.size()) {
-            degree.resize(node_max_id + 1);
+            degree.resize( (node_max_id + 1) * 2 );
         }
         if (node_max_id + 1 > adj.size()) {
-            adj.resize(node_max_id + 1);
+            adj.resize( (node_max_id + 1) * 2 );
         }
         adj[x].insert(y);
         adj[y].insert(x);
@@ -93,21 +93,21 @@ public:
         degree[y] ++;
         // for dynamic, affected
         if (node_max_id + 1 > affected_node.size()) {
-            affected_node.resize(node_max_id + 1);
+            affected_node.resize( (node_max_id + 1) * 2 );
         }
         if (edge_number > affected_edge.size()) {
-            affected_edge.resize(edge_number + 1);
+            affected_edge.resize( (edge_number + 1) * 2 );
         }
         affected_node[x] = true;
         affected_node[y] = true;
         affected_edge[rtn] = true;
-        return rtn;
+        // return rtn;    // need return??
     }
 
-    uint remove(T x, T y) {     // return edge index, for dynamic
-        Edge<T> e(x, y);
+    void remove(Edge<T>& e) {
         uint index = edge_index_map[e.str];
         edge_tomb[index] = true;
+        uint x = e.a, y = e.b;
         adj[x].erase(y);
         adj[y].erase(x);
         degree[x] --;
@@ -115,7 +115,7 @@ public:
         // for dynamic affected 
         affected_node[x] = true;
         affected_node[y] = true;
-        return index;
+        // return index;    // need return??
     }
     
     void endInsert() {
@@ -125,7 +125,10 @@ public:
 
     void resetAffect() {
         fill(affected_node.begin(), affected_node.end(), false);
-        fill(affected_edge.begin(), affected_edge.end(), false);
+        for (uint i = 0; i < edge_number; ++ i)
+            if (!edge_tomb[i])
+                affected_edge[i] = false;
+        // fill(affected_edge.begin(), affected_edge.end(), false);
     }
 
     void setAffectNode(uint index) {
@@ -136,6 +139,9 @@ public:
         affected_edge[index] = true;
         affected_node[edge_list[index].a] = true;
         affected_node[edge_list[index].b] = true;
+        // need to change??
+        edge_support[index] = 0;
+        edge_tau[index] = 0;
     }
 };
 
@@ -149,30 +155,41 @@ public:
     vector< unordered_set<uint> > inverse_table; // node -> super node
     vector< uint > edge_inverse_table;  // edge -> super node
 
-    vector< bool > node_tomb;   // node tomb, for dynamic update
+    vector< bool > tomb_super_node;   // super node tomb, for dynamic update
     vector< bool > affected_super_node; // literaly
 
     uint super_node_number;
     uint super_edge_number;
 
+    uint marked_position;// in a dynamic process, new vertex when build index
+
     SuperGraph(uint nn) {
         super_node_number = 0;
         super_edge_number = 0;
+        marked_position = 0;
         inverse_table.resize(nn + 1);
+    }
+
+    void resetNodeNumber(uint n) {
+        inverse_table.resize(n + 1);
     }
 
     void newVertex(uint k) {
         super_vertex.push_back( unordered_set<uint>() );
         vertex_truss.push_back(k);
         super_node_number ++;
+        // affected super node
+        affected_super_node.push_back(false);
+        // tomb super node
+        tomb_super_node.push_back(false);
     }
 
     void addVertex(uint edge_no, uint u, uint v) {
         super_vertex[super_node_number - 1].insert(edge_no);
         if (edge_no + 1 > edge_inverse_table.size()) {
-            edge_inverse_table.resize(edge_no + 1);
-            edge_inverse_table[edge_no] = super_node_number - 1;
+            edge_inverse_table.resize( (edge_no + 1) * 2 );
         }
+        edge_inverse_table[edge_no] = super_node_number - 1;
         inverse_table[u].insert(super_node_number - 1);
         inverse_table[v].insert(super_node_number - 1);
     }
@@ -185,18 +202,27 @@ public:
     void end() {
         adj.resize(super_node_number + 1);
         for (auto& e : edge_list) {
-            adj[e.a].insert(e.b);
-            adj[e.b].insert(e.a);
+            if (e.a >= marked_position || e.b >= marked_position) {
+                adj[e.a].insert(e.b);
+                adj[e.b].insert(e.a);
+            }
         }
-        affected_super_node.resize(super_node_number + 1);
     }
 
     void setAffectSuperNode(uint index) {
         affected_super_node[index] = true;
-        // TODO: do or not ???
-        for (auto& sn : adj[index]) {
-            adj[sn].erase(index);
-        }
+        // TODO: do or not ??? do not (when remove edge) !!!
+        // for (auto& sn : adj[index]) {
+        //     adj[sn].erase(index);
+        // }
+    }
+
+    void setTombNode(uint index) {
+        tomb_super_node[index] = true;
+    }
+
+    void setMark() {
+        marked_position = super_node_number;
     }
 
     ~SuperGraph() {}

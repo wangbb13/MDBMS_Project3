@@ -8,40 +8,58 @@ using namespace std;
  */
 template <typename T>
 void edgeSup(Graph<T>& graph) {
-    uint u, nmi = graph.node_min_id, nmx = graph.node_max_id, nn = graph.edge_number;
+    uint nmi = graph.node_min_id, nmx = graph.node_max_id, nn = graph.edge_number;
+    uint u, eno1;
+
     vector<uint>& sup = graph.edge_support;
     vector< unordered_set<T> >& adj = graph.adj;
     unordered_map<string, uint>& func = graph.edge_index_map;
+    vector< bool >& aft_node = graph.affected_node;
+    // vector< bool >& aft_edge = graph.affected_edge;
+
     vector<bool> visit(nn+1, true);
     string e1_str = "", e2_str = "", e3_str = "";
+
     for (u = nmi; u < nmx-1; ++ u) {
+        if (!aft_node[u])
+            continue;
         for (auto& v : adj[u]) {
-            e1_str = edgeStr<T>(u, v);
-            if (visit[func[e1_str]]) {
-                for (auto& w : adj[v]) {
-                    e2_str = edgeStr<T>(u, w);
-                    if (func.find(e2_str) != func.end() &&
-                        visit[func[e2_str]]) {
-                        e3_str = edgeStr<T>(v, w);
-                        sup[func[e1_str]] ++;
-                        sup[func[e2_str]] ++;
-                        sup[func[e3_str]] ++;
+            if (aft_node[v]) {
+                e1_str = edgeStr<T>(u, v);
+                eno1 = func[e1_str];
+                if (visit[eno1]) {
+                    for (auto& w : adj[v]) {
+                        e2_str = edgeStr<T>(u, w);
+                        if (func.find(e2_str) != func.end() &&
+                            visit[func[e2_str]]) {
+                            e3_str = edgeStr<T>(v, w);
+                            sup[eno1] ++;
+                            sup[func[e2_str]] ++;
+                            sup[func[e3_str]] ++;
+                        }
                     }
                 }
+                visit[eno1] = false;
             }
-            visit[func[e1_str]] = false;
         }
     }
+
+    #ifdef ALGSUP
+    for (auto& elem : sup) 
+        cout << elem << " ";
+    cout << "calc support end" << endl;
+    #endif
 }
 
 /*
  * Input  > edges: graph.edge_list
+ *          Just affected edges
  * Output < res: graph.edge_tau
  */
 template <typename T>
 void trussDecompose(Graph<T>& graph) {
     edgeSup(graph);
-    uint k = 2, en = graph.edge_number, hasv = 0;
+    uint k = 2, en = graph.edge_number, hasv = 0, afn = 0;
     uint i, j, t, msv = 0x5fffffff, msi = -1, index;
     T u, v, a, b;
     string e1_str =  "", e2_str = "";
@@ -51,18 +69,25 @@ void trussDecompose(Graph<T>& graph) {
     vector<bool> visit(en, true);
     vector<uint>& tau = graph.edge_tau;
     unordered_map<string, uint>& func = graph.edge_index_map;
+    vector<bool>& aft_edge = graph.affected_edge;
     set< pair< uint, uint > > bst;  // support value, edge index
 
     for (i = 0; i < en; ++ i) {
-        bst.insert(make_pair(sup[i], i));
+        if (aft_edge[i]) {
+            bst.insert(make_pair(sup[i], i));
+            afn ++;
+        }
     }
+    #ifdef ALGDECOMP
+    cout << "edge number = " << en << ", afn = " << afn << endl;
+    #endif
     msv = bst.begin()->first;
     msi = bst.begin()->second;
     k = msv + 2;
-    graph.min_edge_tau = k;
+    graph.min_edge_tau = min(graph.min_edge_tau, k);
 
-    while (hasv < en) {
-        while (hasv < en && msi >= 0 && msv <= (k-2)) {
+    while (hasv < afn) {
+        while (hasv < afn && msi >= 0 && msv <= (k-2)) {
             a = graph.edge_list[msi].a;
             b = graph.edge_list[msi].b;
             if (adj[a].size() <= adj[b].size()) {
@@ -97,5 +122,10 @@ void trussDecompose(Graph<T>& graph) {
         }
         k ++;
     }
-    graph.max_edge_tau = k - 1;
+    graph.max_edge_tau = max(graph.max_edge_tau, k - 1);
+
+    #ifdef ALGDECOMP
+    cout << "min tau = " << graph.min_edge_tau << endl;
+    cout << "max tau = " << graph.max_edge_tau << endl;
+    #endif
 }

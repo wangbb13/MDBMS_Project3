@@ -4,6 +4,13 @@
 #include "types.hpp"
 using namespace std;
 
+#define INSERT
+#define REMOVE
+#define ALGUPDATE
+#define ALGSUP
+#define ALGDECOMP
+#define ALGBUILD
+
 template <typename T>
 T string2Num(string str) {
     T ans;
@@ -38,7 +45,8 @@ void readData(const char* filename,
         pr = string2Num<T>(str_num);
         graph.add(pl, pr);
     }
-    graph.end();
+
+    graph.endInsert();
     fin.close();
 }
 

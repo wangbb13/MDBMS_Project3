@@ -15,7 +15,7 @@ void dynamicUpdate(Graph<uint>& graph,
     vector< bool >& tomb_sn = super_graph.tomb_super_node;
     vector< uint >& sp_truss = super_graph.vertex_truss;
     vector< unordered_set<uint> >& super_n = super_graph.super_vertex;
-    uint i, j, u, v;
+    uint i, j, u, v, s;
 
     // remove super edges
     for (i = 0; i < super_graph.super_node_number; ++ i) {
@@ -38,26 +38,51 @@ void dynamicUpdate(Graph<uint>& graph,
         if (affect_sn[i])
             tomb_sn[i] = true;
 
+    vector< bool > visit(sn_number, true);
+    queue< uint > my_q;
     for (i = start; i < sn_number; ++ i) {
-        for (auto& w : s_adj[i]) {
-            if ((i > w) && sp_truss[i] == sp_truss[w]) {
-                if (super_n[i].size() < super_n[w].size()) {
-                    u = i; v = w;
-                } else {
-                    u = w; v = i;
+        if (visit[i]) {
+            my_q.push(i);
+        }
+        vector< uint > level;
+        while (!my_q.empty()) {
+            u = my_q.front();
+            level.push_back(u);
+            visit[u] = false;
+            my_q.pop();
+            for (auto& w : s_adj[u]) {
+                if (visit[w] && sp_truss[i] == sp_truss[w]) {
+                    my_q.push(w);
                 }
-                // merge : extend node
-                for (auto& elem : super_n[u])
-                    super_n[v].insert(elem);
-                // merge : re-link super edge
-                for (auto& elem : s_adj[u]) {
-                    s_adj[v].insert(elem);
-                    s_adj[elem].insert(v);
-                    s_adj[elem].erase(u);
-                }
-                // tomb u
-                tomb_sn[u] = true;
             }
+        }
+        if (level.size() == 0) 
+            continue;
+        s = 0;
+        for (auto& elem : level) {
+            if (super_n[elem].size() > s) {
+                s = super_n[elem].size();
+                u = elem;
+            }
+        }
+        unordered_set<uint> temp_set;
+        for (auto& elem : level) {
+            if (elem != u) {
+                for (auto& item : super_n[elem]) 
+                    super_n[u].insert(item);
+                for (auto& item : s_adj[elem]) {
+                    s_adj[item].erase(elem);
+                    if (item != u && s_adj[u].find(item) == s_adj[u].end()) {
+                        temp_set.insert(item);
+                    }
+                }
+                tomb_sn[elem] = true;
+            }
+        }
+        for (auto& elem : temp_set) {
+            s_adj[elem].insert(u);
+            s_adj[u].insert(elem);
+            super_graph.newEdge(u, elem);
         }
     }
 
@@ -244,4 +269,15 @@ void removeBatch(Graph<uint>& graph,
                 sup[func[str]] = 0;
         }
     }
+
+    #ifdef REMOVE
+    cout << "affect node : ";
+    for (i = 0; i < graph.affected_node.size(); ++ i)
+        if (graph.affected_node[i])
+            cout << i << " ";
+    cout << "affect edge : ";
+    for (i = 0; i < graph.affected_edge.size(); ++ i)
+        if (graph.affected_edge[i])
+            cout << e_list[i] << "(" << sup[i] << ") " << endl;
+    #endif
 }

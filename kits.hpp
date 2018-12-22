@@ -4,12 +4,12 @@
 #include "types.hpp"
 using namespace std;
 
-#define INSERT
-#define REMOVE
-#define ALGUPDATE
-#define ALGSUP
-#define ALGDECOMP
-#define ALGBUILD
+#define INSERT_
+#define REMOVE_
+#define ALGUPDATE_
+#define ALGSUP_
+#define ALGDECOMP_
+#define ALGBUILD_
 
 template <typename T>
 T string2Num(string str) {

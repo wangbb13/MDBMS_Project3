@@ -94,9 +94,12 @@ int main(int argc, char const *argv[])
     // showIndex(graph, super_graph);
     // TODO: more test case
     vector< Edge<uint> > test_add;
-    test_add.push_back(Edge<uint>(6, 7));
+    vector< Edge<uint> > test_rm;
+    test_rm.push_back(Edge<uint>(6, 7));
+    test_add.push_back(Edge<uint>(4, 9));
     start = high_resolution_clock::now();
-    removeBatch(graph, super_graph, test_add);
+    insertBatch(graph, super_graph, test_add);
+    removeBatch(graph, super_graph, test_rm);
     dynamicUpdate(graph, super_graph);
     stop = high_resolution_clock::now();
     cost = duration_cast<microseconds>(stop - start);

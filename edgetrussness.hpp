@@ -30,12 +30,14 @@ void edgeSup(Graph<T>& graph) {
                 if (visit[eno1]) {
                     for (auto& w : adj[v]) {
                         e2_str = edgeStr<T>(u, w);
-                        if (func.find(e2_str) != func.end() &&
+                        if (adj[u].find(w) != adj[u].end() &&
                             visit[func[e2_str]]) {
                             e3_str = edgeStr<T>(v, w);
                             sup[eno1] ++;
-                            sup[func[e2_str]] ++;
-                            sup[func[e3_str]] ++;
+                            if (aft_node[w]) {
+                                sup[func[e2_str]] ++;
+                                sup[func[e3_str]] ++;
+                            }
                         }
                     }
                 }
@@ -45,8 +47,10 @@ void edgeSup(Graph<T>& graph) {
     }
 
     #ifdef ALGSUP
-    for (auto& elem : sup) 
-        cout << elem << " ";
+    cout << endl;
+    vector< Edge<uint> >& e_list = graph.edge_list;
+    // for (int i = 0; i < e_list.size(); ++ i) 
+    //     cout << e_list[i] << "(" << sup[i] << ") " << endl;
     cout << "calc support end" << endl;
     #endif
 }
@@ -78,13 +82,15 @@ void trussDecompose(Graph<T>& graph) {
             afn ++;
         }
     }
-    #ifdef ALGDECOMP
-    cout << "edge number = " << en << ", afn = " << afn << endl;
-    #endif
     msv = bst.begin()->first;
     msi = bst.begin()->second;
     k = msv + 2;
     graph.min_edge_tau = min(graph.min_edge_tau, k);
+
+    #ifdef ALGDECOMP
+    cout << "edge number = " << en << ", afn = " << afn << endl;
+    cout << "k = " << k << endl;
+    #endif
 
     while (hasv < afn) {
         while (hasv < afn && msi >= 0 && msv <= (k-2)) {
@@ -97,8 +103,9 @@ void trussDecompose(Graph<T>& graph) {
             }
             for (auto& w : adj[u]) {
                 e2_str = edgeStr<T>(v, w);
-                if (func.find(e2_str) != func.end() &&
-                    visit[func[e2_str]]) {
+                if (adj[v].find(w) != adj[v].end() &&
+                    visit[func[e2_str]] && 
+                    aft_edge[func[e2_str]]) {
                     e1_str = edgeStr<T>(u, w);
                     index = func[e1_str];
                     bst.erase(make_pair(sup[index], index));
@@ -127,5 +134,9 @@ void trussDecompose(Graph<T>& graph) {
     #ifdef ALGDECOMP
     cout << "min tau = " << graph.min_edge_tau << endl;
     cout << "max tau = " << graph.max_edge_tau << endl;
+
+    // for (i = 0; i < en; ++ i) 
+    //     if (!graph.edge_tomb[i])
+    //         cout << graph.edge_list[i] << " : " << graph.edge_tau[i] << endl;
     #endif
 }

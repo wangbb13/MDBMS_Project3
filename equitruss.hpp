@@ -60,12 +60,13 @@ void buildEuqiTruss(Graph<T>& graph, SuperGraph& super_graph) {
                             u = b; v = a;
                         }
                         for (auto& w : adj[u]) {
-                            if (aft_node[w] && 
-                                adj[v].find(w) != adj[v].end()) {
-                                e1_str = edgeStr(u, w);
-                                eno1 = func[e1_str];
-                                e2_str = edgeStr(v, w);
-                                eno2 = func[e2_str];
+                            if (adj[v].find(w) == adj[v].end())
+                                continue;
+                            e1_str = edgeStr(u, w);
+                            eno1 = func[e1_str];
+                            e2_str = edgeStr(v, w);
+                            eno2 = func[e2_str];
+                            if (aft_node[w]) {
                                 // extra super edge
                                 if (!aft_edge[eno1]) {
                                     temp_set.insert(sei_table[eno1]);
@@ -92,6 +93,10 @@ void buildEuqiTruss(Graph<T>& graph, SuperGraph& super_graph) {
                                 } else {
                                     list[eno2].insert(snID);
                                 }
+                            } else {
+                                // extra super edge
+                                temp_set.insert(sei_table[eno1]);
+                                temp_set.insert(sei_table[eno2]);
                             }
                         }
                         level[e] = false;

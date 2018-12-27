@@ -3,6 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <set>
 #include <algorithm>
 #include <iostream>
 using namespace std;
@@ -17,6 +18,9 @@ public:
     T b;
     string str;
     string _str_1;
+
+    Edge() {}
+
     Edge(T x, T y) {
         a = min(x, y);
         b = max(x, y);
@@ -52,27 +56,42 @@ public:
     uint max_edge_tau;
     uint min_edge_tau;
 
+    uint node_index;
+    uint edge_index;
+
     Graph() {
         node_min_id = 0;
         node_max_id = 0;
         node_number = 0;
         edge_number = 0;
+        node_index = 0;
+        edge_index = 0;
     }
     
+    void set(uint nodes, uint edges) {
+        node_min_id = 0;
+        node_max_id = nodes - 1;
+        node_number = nodes;
+        edge_number = edges;
+        edge_list.resize(edges);
+    }
+
     ~Graph() {}
     
     void add(T x, T y) {
         Edge<T> e(x, y);
-        edge_list.push_back(e);
-        edge_index_map[e.str] = edge_number ++;
-        node_min_id = min(node_min_id, x);
-        node_min_id = min(node_min_id, y);
-        node_max_id = max(node_max_id, x);
-        node_max_id = max(node_max_id, y);
+        edge_index_map[e.str] = edge_index;
+        edge_list[edge_index ++] = e;
+        // edge_list.push_back(e);
+        // edge_index_map[e.str] = edge_number ++;
+        // node_min_id = min(node_min_id, x);
+        // node_min_id = min(node_min_id, y);
+        // node_max_id = max(node_max_id, x);
+        // node_max_id = max(node_max_id, y);
     }
     
     void end() {
-        node_number = node_max_id - node_min_id + 1;
+        // node_number = node_max_id - node_min_id + 1;
         adj.resize(node_number + 1);
         degree.resize(node_number + 1);
         fill(degree.begin(), degree.end(), 0);
@@ -133,4 +152,8 @@ public:
     }
 
     ~SuperGraph() {}
+
+    size_t space() {
+        return sizeof(super_vertex) + sizeof(vertex_truss) + sizeof(edge_list) + sizeof(adj);
+    }
 };

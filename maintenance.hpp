@@ -25,10 +25,13 @@ void dynamicUpdate(Graph<uint>& graph,
         }
     }
 
+    // cout << "before TD" << endl;
     // re-calc edge trussness
     trussDecompose<uint>(graph);
+    // cout << "after TD before build" << endl;
     // re-build equitruss
     buildEuqiTruss<uint>(graph, super_graph);
+    // cout << "after build" << endl;
 
     // merge
     uint sn_number = super_graph.super_node_number;
@@ -86,7 +89,10 @@ void dynamicUpdate(Graph<uint>& graph,
         }
     }
 
+    // cout << "after merge" << endl;
     graph.resetAffect();    // eliminate affected nodes and edges
+    
+    // cout << "after reset affet" << endl;
 }
 
 /*
@@ -95,11 +101,15 @@ void dynamicUpdate(Graph<uint>& graph,
 void insertBatch(Graph<uint>& graph, 
     SuperGraph& super_graph, 
     vector< Edge<uint> >& edges) {
+
+    // cout << "enter inserBatch" << endl;
+
     vector< Edge<uint> >& e_list = graph.edge_list;
     vector< unordered_set<uint> >& adj = graph.adj;
     unordered_map<string, uint>& func = graph.edge_index_map;
     vector<uint>& tau = graph.edge_tau;
     vector<uint>& sup = graph.edge_support;
+    vector<uint>& degree = graph.degree;
     vector<uint>& e_inverse = super_graph.edge_inverse_table;
     vector< unordered_set<uint> >& super_n = super_graph.super_vertex;
     
@@ -135,8 +145,11 @@ void insertBatch(Graph<uint>& graph,
                 Edge<uint> evw(v, common[i]);
                 e1_str = euw.str;
                 e2_str = evw.str;
+                // eno = func[e1_str];
+                // uint x = tau[eno];
+                if (func.find(e1_str) != func.end()) {
                 eno = func[e1_str];
-                if (tau[eno] < k) {
+                if (eno < tau.size() && eno < e_inverse.size() && tau[eno] < k) {
                     sn = e_inverse[eno];
                     super_graph.setAffectSuperNode(sn);
                     for (auto& _e_ : super_n[sn]) {
@@ -147,8 +160,12 @@ void insertBatch(Graph<uint>& graph,
                             exists.insert(e_list[_e_].b);
                     }
                 }
+                }
+                // eno = func[e2_str];
+                // uint x = tau[eno];
+                if (func.find(e2_str) != func.end()) {
                 eno = func[e2_str];
-                if (tau[eno] < k) {
+                if (eno < tau.size() && eno < e_inverse.size() && tau[eno] < k) {
                     sn = e_inverse[eno];
                     super_graph.setAffectSuperNode(sn);
                     for (auto& _e_ : super_n[sn]) {
@@ -158,10 +175,14 @@ void insertBatch(Graph<uint>& graph,
                         if (e_list[_e_].b <= max_id)
                             exists.insert(e_list[_e_].b);
                     }
+                }
                 }
             }
         }
     }
+
+    graph.endInsert();
+    super_graph.resetNodeNumber(graph.node_max_id);
 
     vector<uint> ext_vec(exists.size());
     i = 0;
@@ -182,8 +203,8 @@ void insertBatch(Graph<uint>& graph,
             }
         }
     }
-    graph.endInsert();
-    super_graph.resetNodeNumber(graph.node_max_id);
+
+    // cout << "leave inserBatch" << endl;
 }
 
 void removeBatch(Graph<uint>& graph, 

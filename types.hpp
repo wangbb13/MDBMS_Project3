@@ -53,6 +53,7 @@ public:
     uint node_min_id;
     uint node_max_id;
     uint edge_number;   // max edge_index + 1, precisely
+    uint node_number;
     uint max_edge_tau;
     uint min_edge_tau;
 
@@ -62,6 +63,14 @@ public:
         edge_number = 0;
         max_edge_tau = 0;
         min_edge_tau = 0x1fffffff;
+    }
+
+    void set(uint nodes, uint edges) {
+        node_min_id = 0;
+        node_max_id = nodes - 1;
+        node_number = nodes;
+        edge_number = edges;
+        edge_list.resize(edges);
     }
     
     ~Graph() {}
@@ -81,22 +90,22 @@ public:
             edge_tomb[edge_index_map[e.str]] = false;
         }
         // for dynamic adj and degree
-        if (node_max_id + 1 > degree.size()) {
-            degree.resize( (node_max_id + 1) * 2 );
+        if (node_max_id + 1 >= degree.size()) {
+            degree.resize( (node_max_id + 1000) );
         }
-        if (node_max_id + 1 > adj.size()) {
-            adj.resize( (node_max_id + 1) * 2 );
+        if (node_max_id + 1 >= adj.size()) {
+            adj.resize( (node_max_id + 1000) );
         }
         adj[x].insert(y);
         adj[y].insert(x);
         degree[x] ++;
         degree[y] ++;
         // for dynamic, affected
-        if (node_max_id + 1 > affected_node.size()) {
-            affected_node.resize( (node_max_id + 1) * 2 );
+        if (node_max_id + 1 >= affected_node.size()) {
+            affected_node.resize( (node_max_id + 1000) );
         }
-        if (edge_number > affected_edge.size()) {
-            affected_edge.resize( (edge_number + 1) * 2 );
+        if (edge_number >= affected_edge.size()) {
+            affected_edge.resize( (edge_number + 1000) );
         }
         affected_node[x] = true;
         affected_node[y] = true;
@@ -119,8 +128,8 @@ public:
     }
     
     void endInsert() {
-        edge_support.resize(edge_number);
-        edge_tau.resize(edge_number);
+        edge_support.resize(edge_number + 1);
+        edge_tau.resize(edge_number + 1);
     }
 
     void resetAffect() {
@@ -186,8 +195,8 @@ public:
 
     void addVertex(uint edge_no, uint u, uint v) {
         super_vertex[super_node_number - 1].insert(edge_no);
-        if (edge_no + 1 > edge_inverse_table.size()) {
-            edge_inverse_table.resize( (edge_no + 1) * 2 );
+        if (edge_no + 1 >= edge_inverse_table.size()) {
+            edge_inverse_table.resize( (edge_no + 1000) );
         }
         edge_inverse_table[edge_no] = super_node_number - 1;
         inverse_table[u].insert(super_node_number - 1);

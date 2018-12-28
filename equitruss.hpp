@@ -3,12 +3,16 @@
 #include <queue>
 using namespace std;
 
+// int g_debug = 0;
+
 /*
  * Input  < graph with edge trussness !!!
  * Output > super graph, i.e. index EquiTruss
  */
 template <typename T>
 void buildEuqiTruss(Graph<T>& graph, SuperGraph& super_graph) {
+    // g_debug += 1;
+
     uint en = graph.edge_number;
     uint min_k = graph.min_edge_tau;
     uint max_k = graph.max_edge_tau;
@@ -34,8 +38,13 @@ void buildEuqiTruss(Graph<T>& graph, SuperGraph& super_graph) {
     super_graph.setMark();
 
     for (i = 0; i < en; ++ i) 
-        if (aft_edge[i])
+        if (aft_edge[i] && truss[i] <= max_k && truss[i] >= min_k) {
             phi[truss[i] - min_k].push_back(i);
+            // if (g_debug == 2) 
+            //     cout << (truss[i] - min_k) << " " << phi.size() << endl;
+        }
+
+    // cout << "build " << 40 << endl;
 
     queue<uint> my_q;
     unordered_set<uint> temp_set;

@@ -53,6 +53,7 @@ void edgeSup(Graph<T>& graph) {
     //     cout << e_list[i] << "(" << sup[i] << ") " << endl;
     cout << "calc support end" << endl;
     #endif
+    // cout << "calc support end" << endl;
 }
 
 /*

@@ -31,7 +31,7 @@ void showIndex(Graph<uint>& graph, SuperGraph& super_graph) {
             cout << item << endl;
 }
 
-int main(int argc, char const *argv[])
+void test_code()
 {
     Graph<uint> graph;
 
@@ -107,5 +107,123 @@ int main(int argc, char const *argv[])
     showIndex(graph, super_graph);
 
     system("pause");
+}
+
+int expOne(const char* filename)
+{
+    Graph<uint> graph;
+    uint batch = 1000;
+    uint freq = 10;
+
+    // load half amount of data
+    char delimiter = '\t';
+    char newline = '\n';
+    ifstream fin(filename);
+    if (!fin.is_open()) {
+        cout << filename << " is not exists." << endl;
+        return 0;
+    }
+    string str_line = "";
+    string str_num = "";
+    istringstream iss(str_line);
+    uint pl, pr, fno, fnn, fen;
+    // read number of nodes and edges
+    getline(fin, str_line, newline);
+    iss.clear();
+    iss.str(str_line);
+    getline(iss, str_num, delimiter);
+    fnn = string2Num<uint>(str_num);
+    getline(iss, str_num, delimiter);
+    fen = string2Num<uint>(str_num);
+    
+    auto start = high_resolution_clock::now();
+    uint half = fen / 2;
+    for (fno = 0; fno < half; ++ fno) {
+        getline(fin, str_line, newline);
+        iss.clear();
+        iss.str(str_line);
+        getline(iss, str_num, delimiter);
+        pl = string2Num<uint>(str_num);
+        getline(iss, str_num, delimiter);
+        pr = string2Num<uint>(str_num);
+        graph.add(pl, pr);
+    }
+    graph.endInsert();
+    auto stop = high_resolution_clock::now();
+    auto cost = duration_cast<microseconds>(stop - start);
+    cout << "[load half data time]: " << cost.count() << " us" << endl << endl;
+
+    // read add or delete data
+    vector< vector< Edge<uint> > > temp_edges(freq);
+    for (uint i = 0; i < freq; ++ i) {
+        for (uint j = 0; j < batch; ++ j) {
+            getline(fin, str_line, newline);
+            iss.clear();
+            iss.str(str_line);
+            getline(iss, str_num, delimiter);
+            pl = string2Num<uint>(str_num);
+            getline(iss, str_num, delimiter);
+            pr = string2Num<uint>(str_num);
+            temp_edges[i].push_back(Edge<uint>(pl, pr));
+        }
+    }
+
+    // truss decompose
+    start = high_resolution_clock::now();
+    trussDecompose<uint>(graph);
+    stop = high_resolution_clock::now();
+    cost = duration_cast<microseconds>(stop - start);
+    cout << "[trussDecompose time]: " << cost.count() << " us" << endl << endl;
+    
+    // build index
+    SuperGraph super_graph(graph.node_max_id);
+    start = high_resolution_clock::now();
+    buildEuqiTruss(graph, super_graph);
+    stop = high_resolution_clock::now();
+    cost = duration_cast<microseconds>(stop - start);
+    cout << "[buildEuqiTruss time]: " << cost.count() << " us" << endl << endl;
+    graph.resetAffect();    // eliminate affected nodes and edges !!!!!
+
+    // test insert
+    uint rt = 0;
+    for (uint i = 0; i < freq; ++ i) {
+        insertBatch(graph, super_graph, temp_edges[i]);
+        start = high_resolution_clock::now();
+        dynamicUpdate(graph, super_graph);
+        stop = high_resolution_clock::now();
+        cost = duration_cast<microseconds>(stop - start);
+        rt += cost.count();
+        // cout << "insert " << i << ":" << temp_edges[i][0] << endl;
+        // cout << "insert " << i << endl;
+    }
+    cout << "Insert Update Time : " << rt << " (" << freq << ")" << endl;
+
+    // test delete
+    rt = 0;
+    for (int i = freq - 1; i >= 0; -- i) {
+        removeBatch(graph, super_graph, temp_edges[i]);
+        start = high_resolution_clock::now();
+        dynamicUpdate(graph, super_graph);
+        stop = high_resolution_clock::now();
+        cost = duration_cast<microseconds>(stop - start);
+        rt += cost.count();
+        graph.resetAffect();    // eliminate affected nodes and edges !!!!!
+        // cout << "remove " << i << endl;
+    }
+    cout << "Remove Update Time : " << rt << " (" << freq << ")" << endl;
+
+    return 0;
+}
+
+int main(int argc, char const *argv[])
+{
+    if (argc != 2) {
+        cout << "Usage: ./main {filename} " << endl;
+        return 0;
+    }
+    const char* filename = argv[1];
+    cout << "=============== " << filename << " ====================" << endl;
+    expOne(filename);
+    cout << "==================== END ==============================" << endl;
     return 0;
 }

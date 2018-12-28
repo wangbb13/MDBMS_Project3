@@ -34,8 +34,18 @@ void readData(const char* filename,
     string str_num = "";
     istringstream iss(str_line);
     T pl, pr;
-    for (uint _ = 0; _ < ignore; ++ _)
-        getline(fin, str_line, newline);
+    // read number of nodes and edges
+    getline(fin, str_line, newline);
+    iss.clear();
+    iss.str(str_line);
+    getline(iss, str_num, delimiter);
+    pl = string2Num<uint>(str_num);
+    getline(iss, str_num, delimiter);
+    pr = string2Num<uint>(str_num);
+    // graph.set(pl, pr);
+    
+    // for (uint _ = 0; _ < ignore; ++ _)
+    //     getline(fin, str_line, newline);
     while (getline(fin, str_line, newline)) {
         iss.clear();
         iss.str(str_line);
